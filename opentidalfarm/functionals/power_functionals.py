@@ -55,6 +55,9 @@ class PowerFunctional(PrototypeFunctional):
         :type turbine_field: dolfin.Function
 
         """
+        pow_value = assemble(self.power(state, turbine_field)*self.farm.site_dx)
+        print "power= ", pow_value
+
         return self.power(state, turbine_field)*self.farm.site_dx
 
     def power(self, state, turbine_field):
