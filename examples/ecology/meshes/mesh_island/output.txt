@@ -1,0 +1,11 @@
+Traceback (most recent call last):
+  File "sw.py", line 13, in <module>
+    config = UnsteadyConfiguration("mesh.xml", inflow_direction = [1, 0], eta0=eta0)
+NameError: name 'UnsteadyConfiguration' is not defined
+Traceback (most recent call last):
+  File "sw.py", line 13, in <module>
+    config = UnsteadyConfiguration("mesh.xml", inflow_direction = [1, 0], eta0=eta0)
+NameError: name 'UnsteadyConfiguration' is not defined
+Command exited with non-zero status 1
+0.66user 0.13system 0:00.43elapsed 183%CPU (0avgtext+0avgdata 379744maxresident)k
+376inputs+928outputs (11major+52217minor)pagefaults 0swaps

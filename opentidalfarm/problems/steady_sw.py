@@ -75,6 +75,13 @@ class SteadySWProblemParameters(FrozenClass):
     # Boundary conditions
     bcs = BoundaryConditionSet()
 
+    # Adding ecological operators and penalties.
+    eco_penalty_multiplier = 0.
+    sed_penalty_multiplier = 0.
+    multiplier = 0.
+    eco_dx = None
+    sed_dx = None
+
 class SteadySWProblem(Problem):
     r""" Create a steady-state shallow water problem:
 

@@ -21,6 +21,7 @@ from problems import *
 from domains import *
 from functionals import *
 from tidal import *
+from helpers import *
 from optimisation_helpers import *
 from reduced_functional import *
 from fenics_reduced_functional import *
