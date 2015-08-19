@@ -16,7 +16,10 @@ class TimeIntegrator(object):
 
     def add(self, time, state, tf, is_final):
         if not self.final_only or (self.final_only and is_final):
-            val = assemble(self.functional.Jt(state, tf))
+# ROAN - trying to get time into ecology functional
+            val = assemble(self.functional.Jt(state, tf, self.times))
+#            val = assemble(self.functional.Jt(state, tf))
+#            from IPython import embed; embed()
             self.vals.append(val)
             self.times.append(time)
 
@@ -56,11 +59,13 @@ class TimeIntegrator(object):
         R = FunctionSpace(self.problem.parameters.domain.mesh, "R", 0)
         tf = Function(R, name="turbine_friction")
 
+# ROAN added times in to Jt
+        times_dummy = []
         if self.final_only:
-            return Functional(self.functional.Jt(state, tf) * dt[FINISH_TIME])
+            return Functional(self.functional.Jt(state, tf, times_dummy) * dt[FINISH_TIME])
 
         if type(self.problem) == MultiSteadySWProblem:
-            return Functional(self.functional.Jt(state, tf) *
+            return Functional(self.functional.Jt(state, tf, times_dummy) *
                     dt[float(self.times[1]):])
         else:
-            return Functional(self.functional.Jt(state, tf) * dt)
+            return Functional(self.functional.Jt(state, tf, times_dummy) * dt)

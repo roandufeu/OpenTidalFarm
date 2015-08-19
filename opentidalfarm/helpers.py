@@ -129,7 +129,7 @@ class StateWriter:
         self.timestep = 0
         self.solver = solver
         self.optimisation_iteration = solver.optimisation_iteration
-        self.u_out, self.p_out = self.output_files(
+        self.u_out, self.p_out  = self.output_files(
             solver.problem.parameters.finite_element.func_name)
         self.M_u_out, self.v_out, self.u_out_state = self.u_output_projector(
             solver.function_space.mesh())
@@ -146,8 +146,17 @@ class StateWriter:
         solve(self.M_p_out, self.p_out_state.vector(), rhs, "cg", "sor",
               annotate=False)
 
+        #self.u_out, self.p_out, self.u_out_xml = self.output_files(
+        #    self.solver.problem.parameters.finite_element.func_name)
+
+
+        u_out_xml = File(os.path.join(self.solver.parameters.output_dir,
+            "iter_{}".format(self.optimisation_iteration), str(self.timestep) + "_u.xml"),
+             "compressed")
+
         self.u_out << self.u_out_state
         self.p_out << self.p_out_state
+        u_out_xml << self.u_out_state
 
         if self.callback is not None:
             self.callback(state, self.u_out_state, self.p_out_state,
@@ -187,7 +196,11 @@ class StateWriter:
         p_out = File(os.path.join(self.solver.parameters.output_dir,
             "iter_{}".format(self.optimisation_iteration), basename + "_p.pvd"),
             "compressed")
-        return u_out, p_out
+        #from IPython import embed; embed()
+        #u_out_xml = File(os.path.join(self.solver.parameters.output_dir,
+        #    "iter_{}".format(self.optimisation_iteration), basename +str(self.timestep) + "_u.xml"),
+         #    "compressed")
+        return u_out, p_out #, u_out_xml
 
 
 def cpu0only(f):

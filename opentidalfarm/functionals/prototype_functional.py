@@ -33,7 +33,7 @@ class PrototypeFunctional(object):
         ''' implements the negative of the functional '''
         return -1 * self
 
-    def Jt(self, state, tf):
+    def Jt(self, state, tf, times):
         r'''This method should return the form which computes the functional's
         contribution for one timelevel.'''
         raise NotImplementedError('PrototypeFunctional.Jt needs to be \
@@ -50,9 +50,9 @@ class CombinedFunctional(PrototypeFunctional):
             assert isinstance(functionals, PrototypeFunctional)
         self.functional_list = functional_list
 
-    def Jt(self, state, tf):
+    def Jt(self, state, tf, times):
         '''Returns the form which computes the combined functional.'''
-        combined_functional = sum([functional.Jt(state, tf) for functional in \
+        combined_functional = sum([functional.Jt(state, tf, times) for functional in \
             self.functional_list])
         return combined_functional
 
@@ -67,8 +67,8 @@ class ScaledFunctional(PrototypeFunctional):
         self.functional = functional
         self.scaling_factor = scaling_factor
 
-    def Jt(self, state, tf):
+    def Jt(self, state, tf, times):
         '''Returns the form which computes the combined functional.'''
-        scaled_functional = self.scaling_factor * self.functional.Jt(state, tf)
+        scaled_functional = self.scaling_factor * self.functional.Jt(state, tf, times)
         return scaled_functional
 

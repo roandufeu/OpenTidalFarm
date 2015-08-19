@@ -303,7 +303,6 @@ class ReducedFunctional(ReducedFunctionalPrototype):
         log(INFO, 'Start evaluation of dj')
         timer = dolfin.Timer("dj evaluation")
         dj = self._compute_gradient_mem(m, forget)
-
         # We assume that the gradient is computed at and only at the beginning
         # of each new optimisation iteration. Hence, this is the right moment
         # to store the turbine friction field and to increment the optimisation
@@ -378,7 +377,7 @@ class ReducedFunctional(ReducedFunctionalPrototype):
         return self._dj(m_array, forget)
 
     def derivative_with_check(self, m, seed=0.1, tol=1.8, forget=True):
-        ''' This function checks the correctness and returns the gradient of 
+        ''' This function checks the correctness and returns the gradient of
         the functional for the parameter choice m. '''
 
         log(INFO, "Checking derivative at m = " + str(m))

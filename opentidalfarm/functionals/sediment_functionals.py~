@@ -1,3 +1,4 @@
+from dolfin import dot, dx
 from dolfin import *
 from prototype_functional import PrototypeFunctional
 
@@ -57,13 +58,19 @@ class SedimentFunctional(PrototypeFunctional):
         elif (med_sand_upper == 1) and (med_sand_lower == 1):
             upper_limit = 0.325
             lower_limit = 0.275
-        else:
+        elif (fine_sand_upper == 1):
             upper_limit = 0.275
             lower_limit = 0.0
+        else:
+            upper_limit = 10
+            lower_limit = 0
+#            raise ValueError(
+#                "cannot split into sediment domains - invalid flow velocity?")
 
         # import parameters
         penalty_multiplier = (self.problem.parameters.sed_penalty_multiplier *
                               self.problem.parameters.multiplier)
+#        eco_domain = self.problem.parameters.eco_domain
 
         penalty_function = (
             penalty_multiplier * 0.5 * (
@@ -72,8 +79,9 @@ class SedimentFunctional(PrototypeFunctional):
         return penalty_function
 
     def Jt(self, state, turbine_field):
-        sed_value = assemble(self.sediment(state) *
-                             self.problem.parameters.sed_dx)
+	from IPython import embed; embed()
+        sed_value = assemble(self.sediment(state) * self.problem.parameters.sed_dx)
+	from IPython import embed; embed()
         print "sediment = ", sed_value
 
         # the objective functional

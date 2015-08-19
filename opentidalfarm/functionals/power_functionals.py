@@ -41,12 +41,13 @@ class PowerFunctional(PrototypeFunctional):
         self.rho = problem.parameters.rho
         self.farm.update()
 
+       # self.problem = problem
         self._cut_in_speed = cut_in_speed
         self._cut_out_speed = cut_out_speed
         self._eps = eps
 
 
-    def Jt(self, state, turbine_field):
+    def Jt(self, state, turbine_field, times):
         """ Computes the power output of the farm.
 
         :param state: Current solution state
@@ -57,6 +58,7 @@ class PowerFunctional(PrototypeFunctional):
         """
         pow_value = assemble(self.power(state, turbine_field)*self.farm.site_dx)
         print "power= ", pow_value
+       # from IPython import embed; embed()
 
         return self.power(state, turbine_field)*self.farm.site_dx
 
@@ -69,6 +71,7 @@ class PowerFunctional(PrototypeFunctional):
         :type turbine_field: dolfin.Function
 
         """
+#        from IPython import embed; embed()
         return self.rho * turbine_field * self._speed_squared(state) ** 1.5
 
     def Jt_individual(self, state, i):
@@ -140,7 +143,7 @@ class PowerCurveFunctional(PrototypeFunctional):
         assert(self.params["turbine_thrust_parametrisation"] or \
                self.params["implicit_turbine_thrust_parametrisation"])
 
-    def Jt(self, state, tf):
+    def Jt(self, state, tf, times):
         up_u = state[3]  # Extract the upstream velocity
         #ux = state[0]
         def power_function(u):
