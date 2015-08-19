@@ -1,0 +1,50 @@
+#!/usr/bin/python
+from opentidalfarm import *
+import os.path
+import sys
+
+parameters["reorder_dofs_serial"] = False
+
+mesh_basefile = sys.argv[1]
+farm_selector = int(sys.argv[2])
+output_file = sys.argv[3]
+
+utm_zone = 30
+utm_band = 'V'
+
+mesh = Mesh(mesh_basefile + ".xml")
+
+V_dg0 = FunctionSpace(mesh, 'DG', 0)
+V_cg1 = FunctionSpace(mesh, 'CG', 1)
+
+# Load bathymetry
+depth = Function(V_cg1, name="depth")
+File("../bathymetry/bathymetry.xml") >> depth
+
+# Get mesh function with the farm ids
+domains = MeshFunction("size_t", mesh, mesh_basefile + "_physical_region.xml")
+if farm_selector is not None:
+  domains_ids = MeshFunction("size_t", mesh, mesh_basefile + "_physical_region.xml")
+  domains.set_all(0)
+  domains.array()[domains_ids.array() == farm_selector] = 1
+
+# Compute bathymetry gradient
+depth_grad = Function(V_dg0)
+F = inner(TrialFunction(V_dg0) - (depth.dx(0)**2 + depth.dx(1)**2)**0.5, TestFunction(V_dg0))*dx
+solve(lhs(F) == rhs(F), depth_grad)
+
+# The maximum gradient in which turbines can be deployed
+grad_limit = 0.015
+jump = lambda x: 1 if x < grad_limit else 0
+vjump = numpy.vectorize(jump)
+
+# Mask the mesh domain where gradient is below the limit
+indic_arr = vjump(depth_grad.vector().get_local())
+indic_arr *= domains.array()
+
+# Store the result
+domains.set_values(numpy.array(indic_arr, dtype=numpy.uintp))
+f = File(output_file)
+f << domains
+plot(domains, interactive=True)
+print "Wrote mesh domain file"
