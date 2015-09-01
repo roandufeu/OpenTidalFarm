@@ -197,7 +197,7 @@ print rf_params
 # Now we can define the constraints for the controls and start the
 # optimisation.
 
-init_tf = model_turbine.maximum_smeared_friction/1000*args.turbines
+innit_tf = model_turbine.maximum_smeared_friction/1000*args.turbines
 farm.friction_function.assign(Constant(init_tf))
 
 # Comment this for only forward modelling
