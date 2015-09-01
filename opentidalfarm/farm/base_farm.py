@@ -1,6 +1,7 @@
 import numpy
 import dolfin
 from ..optimisation_helpers import MinimumDistanceConstraints
+from ..optimisation_helpers import MinimumDistanceConstraintsLargeArrays
 from ..turbine_cache import TurbineCache
 
 class BaseFarm(object):
@@ -46,6 +47,7 @@ class BaseFarm(object):
     @property
     def number_of_turbines(self):
         """The number of turbines in the farm.
+
         :returns: The number of turbines in the farm.
         :rtype: int
         """
@@ -231,6 +233,88 @@ class BaseFarm(object):
                     "array." % (num_x*num_y, num_x, num_y))
 
 
+    def _lhs_turbine_layout(self, number_turbines, site_x_start, site_x_end,
+                            site_y_start, site_y_end):
+        """Adds to the farm a turbine layout based on latin hypercube sampling.
+
+        :param turbine: Defines the type of turbine to add to the farm.
+        :type turbine: Turbine object.
+        :param number_turbines: The number of turbines to be placed.
+        :type number_turbines: int
+        :param num_y: The number of turbines placed in the y-direction.
+        :type num_y: int
+        :param site_x_start: The minimum x-coordinate of the site.
+        :type site_x_start: float
+        :param site_x_end: The maximum x-coordinate of the site.
+        :type site_x_end: float
+        :param site_y_start: The minimum y-coordinate of the site.
+        :type site_y_start: float
+        :param site_y_end: The maximum y-coordinate of the site.
+        :type site_y_end: float
+        :raises: ValueError
+
+        """
+        if self._turbine_specification is None:
+            raise ValueError("A turbine specification has not been set.")
+
+        turbine = self._turbine_specification
+
+        # Generate the start and end points in the desired layout.
+        start_x = site_x_start + turbine.radius
+        start_y = site_y_start + turbine.radius
+        end_x = site_x_end - turbine.radius
+        end_y = site_y_end - turbine.radius
+        site_x = end_x - start_x
+        site_y = end_y - start_y
+        capacity = int(numpy.floor(site_x/(1.5*turbine.diameter))) \
+                   * int(numpy.floor(site_y/(1.5*turbine.diameter)))
+        over_capacity = capacity < number_turbines
+
+        if over_capacity:
+            raise ValueError("Too many turbines")
+
+        def lhs(number_turbines):
+            """ Latin hypercube sampling of a unit square
+            """
+            # generate the intervals
+            cut = numpy.linspace(0, 1, number_turbines+1)
+            # fill points uniformly
+            a = cut[:number_turbines]
+            b = cut[1:number_turbines + 1]
+            c = numpy.random.rand(number_turbines, 2)
+            random_points = numpy.zeros_like(c)
+            for i in [0,1]:
+                random_points[:, i] = c[:, i]*(b-a) + a
+            # make the random pairings
+            points = numpy.zeros_like(random_points)
+            for j in [0,1]:
+                order = numpy.random.permutation(range(number_turbines))
+                points[:, j] = random_points[order, j]
+            return points
+
+        # Fetch the points
+        points = lhs(number_turbines)
+
+        #Scale the points
+        points[:,0] = (points[:,0] * site_x) + start_x
+        points[:,1] = (points[:,1] * site_y) + start_y
+
+        for i in range(len(points)):
+            self.add_turbine((points[i,0], points[i,1]))
+
+        dolfin.info("Used latin hypercube sampling to add %i turbines to the site"\
+                    % number_turbines)
+
+        # NOTE there is no simple way of checking the starting design satisfies
+        # the inequality constraints (if they have been set) Generally the
+        # design will 'untangle' itself in the second iteration - i.e. when the
+        # turbine positions are updated the constraints should be fulfilled.
+        # However, with densely populated sites, it may be wise to use one of
+        # the other layout options.
+        dolfin.info('LHS generated starting layout may not fulfill inequality '\
+                    'constraints if set... use caution')
+
+
     def set_turbine_positions(self, positions):
         """Sets the turbine position and an equal friction parameter.
 
@@ -249,11 +333,16 @@ class BaseFarm(object):
                                    "boundaries.")
 
 
-    def minimum_distance_constraints(self):
+    def minimum_distance_constraints(self, large=False):
         """Returns an instance of MinimumDistanceConstraints.
 
-        :returns: An instance of InequalityConstraint defining the minimum distance between turbines.
-        :rtype: :doc:`opentidalfarm.farm.MinimumDistanceConstraints`
+        :param bool large: Use a minimum distance implementation that is
+            suitable for large farms (i.e. many turbines). Default: False
+        :returns: An instance of dolfin_adjoint.InequalityConstraint that
+            enforces a minimum distance between turbines.
+        :rtype: :py:class:`MinimumDistanceConstraints`
+            (if large=False) or :py:class:`MinimumDistanceConstraintsLargeArray`
+            (if large=True)
 
         """
         # Check we have some turbines.
@@ -265,4 +354,7 @@ class BaseFarm(object):
         controls = self._turbine_specification.controls
         minimum_distance = self._turbine_specification.minimum_distance
         positions = self.turbine_positions
-        return MinimumDistanceConstraints(self, positions, minimum_distance, controls)
+        if large:
+            return MinimumDistanceConstraintsLargeArrays(positions, minimum_distance, controls)
+        else:
+            return MinimumDistanceConstraints(positions, minimum_distance, controls)

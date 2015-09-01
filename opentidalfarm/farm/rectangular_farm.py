@@ -9,7 +9,7 @@ class RectangularFarm(Farm):
 
     """
     def __init__(self, domain, site_x_start, site_x_end, site_y_start,
-                 site_y_end, turbine=None, site_ids=None):
+                 site_y_end, turbine=None, site_ids=None, order=2):
         """Initializes an empty rectangular farm with the given dimensions.
 
         :param mesh: The name of the mesh file to use, e.g. 'mesh.xml' if the
@@ -30,7 +30,7 @@ class RectangularFarm(Farm):
 
         # Create a turbine function space and set the function space in the
         # cache.
-        self._turbine_function_space = FunctionSpace(self.domain.mesh, "CG", 2)
+        self._turbine_function_space = FunctionSpace(self.domain.mesh, "CG", order)
         self.turbine_cache.set_function_space(self._turbine_function_space)
 
         # Store site dimensions.
@@ -148,6 +148,36 @@ class RectangularFarm(Farm):
             num_x, num_y, x_start, x_end, y_start, y_end)
 
 
+    def add_lhs_turbine_layout(self, number_turbines, x_start=None,
+                               x_end=None, y_start=None, y_end=None):
+        """Adds to the farm a turbine layout based upon a latin hypercube
+        sampling of the turbine area.
+
+        :param turbine: Defines the type of turbine to add to the farm.
+        :type turbine: Turbine object.
+        :param number_turbines: The number of turbines to be placed.
+        :type number_turbines: int
+        :param x_start: The minimum x-coordinate of the site.
+        :type x_start: float
+        :param x_end: The maximum x-coordinate of the site.
+        :type x_end: float
+        :param y_start: The minimum y-coordinate of the site.
+        :type y_start: float
+        :param y_end: The maximum y-coordinate of the site.
+        :type y_end: float
+        :raises: ValueError
+
+        """
+        # Get default parameters:
+        if x_start is None: x_start = self.site_x_start
+        if y_start is None: y_start = self.site_y_start
+        if x_end is None: x_end = self.site_x_end
+        if y_end is None: y_end = self.site_y_end
+
+        return super(RectangularFarm, self)._lhs_turbine_layout(
+            number_turbines, x_start, x_end, y_start, y_end)
+
+
     def site_boundary_constraints(self):
         """Returns the site boundary constraints for a rectangular site.
 
@@ -183,6 +213,12 @@ class RectangularFarm(Farm):
                                    dolfin_adjoint.Constant(lower_y)]
         upper_bounds = n_turbines*[dolfin_adjoint.Constant(upper_x),
                                    dolfin_adjoint.Constant(upper_y)]
+
         return lower_bounds, upper_bounds
 
+    def friction_constraints(self):
+        n_turbines = len(self.turbine_positions)
+        lower_bounds = n_turbines*[dolfin_adjoint.Constant(0)]
+        upper_bounds = n_turbines*[dolfin_adjoint.Constant(self._turbine_specification.friction)]
 
+        return lower_bounds, upper_bounds
