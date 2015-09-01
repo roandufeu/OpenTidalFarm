@@ -5,9 +5,8 @@ from prototype_functional import PrototypeFunctional
 
 class EcologyFunctional(PrototypeFunctional):
 
-    def __init__(self, problem, solver, u_ambient, alpha=0.8, beta=3):
+    def __init__(self, problem, u_ambient, alpha=0.8, beta=3):
         self.problem = problem
-        self.solver = solver
         self.u_ambient = u_ambient
         self.alpha = alpha
         self.beta = beta
