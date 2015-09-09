@@ -81,7 +81,7 @@ class SteadySWProblemParameters(FrozenClass):
     multiplier = 0.
     eco_dx = None
     sed_dx = None
-    timesteps = Constant(100)
+    timesteps = 100
 
 class SteadySWProblem(Problem):
     r""" Create a steady-state shallow water problem:

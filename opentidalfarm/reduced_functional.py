@@ -284,7 +284,7 @@ class ReducedFunctional(ReducedFunctionalPrototype):
         if self.parameters.save_checkpoints:
             self._save_checkpoint()
 
-        log(INFO, 'Runtime: %f s.' % timer.elapsed()[0])
+        log(INFO, 'Runtime: %f s.' % timer.value())
         log(INFO, 'j = %e.' % float(j))
         self.last_j = j
 

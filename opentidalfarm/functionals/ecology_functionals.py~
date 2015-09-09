@@ -27,6 +27,7 @@ class EcologyFunctional(PrototypeFunctional):
 #            Vamb = VectorFunctionSpace(self.problem.parameters.domain.mesh,
 #                                      'CG', 1, dim=2)
 
+        from IPython import embed; embed()
         ua_x = self.u_ambient[p][0]
         ua_y = self.u_ambient[p][1]
         Ua = (ua_x**2 + ua_y**2)**0.5
